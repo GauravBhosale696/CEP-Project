@@ -5,7 +5,7 @@
 }
 
 body {
-    background-color: rgb(188, 188, 188);
+    background-color: rgb(217, 217, 217);
 }
 
 nav {
@@ -19,4 +19,36 @@ nav {
 nav .about-us-header {
     color: white;
     font-size: 2rem;
+}
+
+.about-us-box {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+div h2{
+    color: #00529B;
+    margin-top: 20px;
+}
+div p{
+    line-height: 1.6;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+.team{
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    
+}
+.team-member{
+    width: 150px;
+    border-radius: 10px;
+    color: white;
+    padding: 15px;
+    background: #00B470;
 }
