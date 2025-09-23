@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MEDI-TRACK</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="left">MEDI-TRACK</div>
+            <div class="right">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="login_page.html">Login</a></li>
+                    <li><a href="about-us.html">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <section class="firstsection" id="home">
+            <div class="leftsection">
+                Welcome,
+                <div>
+                    <span id="element"></span>
+                </div>
+
+            </div>
+            <div class="rightsection">
+                <img src="image.png" alt="logo">
+            </div>
+
+        </section>
+    </main>
+</body>
+<script src="https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js"></script>
+<script>
+    var typed = new Typed('#element', {
+        strings: ['Pharmaceutical Entrepreneurs', 'Medical Store Administrators','Healthcare Retailers', 'Pharmacy Managers', 'Healthcare Business Owners'],
+        typeSpeed: 50,
+    });
+</script>
+
+</html>
