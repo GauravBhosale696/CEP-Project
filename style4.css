@@ -1,0 +1,76 @@
+* {
+    margin: 0px;
+    padding: 0px;
+}
+
+body {
+    background-color: #e6f5ff;
+
+    font-family: 'Poppins', sans-serif;
+}
+
+nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 90px;
+    background-color: #00529B;
+}
+
+.nav-center {
+    color: #00B470;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.mainbox {
+    max-width: 1200px;
+    margin: 90px auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 20px;
+    padding: 20px;
+}
+
+.mainbox .box1 {
+    position: relative;
+    height: 100px;
+    background: linear-gradient(135deg, #00529B, #00B470);
+    color: white;
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    font-size: 25px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.box1::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(120deg,
+            rgba(255, 255, 255, 0.2),
+            rgba(255, 255, 255, 0.05));
+    transform: rotate(25deg);
+    animation: shine 3s infinite linear;
+}
+
+@keyframes shine {
+    0% {
+        transform: translateX(-100%) rotate(25deg);
+    }
+
+    100% {
+        transform: translateX(100%) rotate(25deg);
+    }
+}

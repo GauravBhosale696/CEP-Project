@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style3.css">
+    <title>Register</title>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="left">MEDI-TRACK</div>
+            <div class="right">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="login_page.html">Login</a></li>
+                    <li><a href="about-us.html">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <div class="register">
+            <form>
+                <h2>Medi-Track Registration</h2>
+                <h3>Personal Details</h3>
+                <div class="form-group">
+                    <label for="name">Enter Name:</label>
+                    <input type="text" id="name" name="name" placeholder="Owner Name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Enter Email:</label>
+                    <input type="email" id="email" name="email" placeholder="owner@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Enter Phone Number:</label>
+                    <input type="number" id="phone" name="phone" placeholder="+91 XXXXXXXXXX" required>
+                </div>
+                <h3>Account Details</h3>
+                <div class="form-group">
+                    <label for="UserName">Enter UserName:</label>
+                    <input type="text" id="UserName" name="UserName" placeholder="UserName" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Enter Password:</label>
+                    <input type="password" id="password" name="password" placeholder="********" required>
+                </div>
+                <h3>Store Details</h3>
+                <div class="form-group">
+                    <label for="Pharmacy-name">Enter Pharmacy Name:</label>
+                    <input type="text" id="Pharmacy-name" name="Pharmacy-name" placeholder="Shop name" required>
+                </div>
+                <div class="form-group">
+                    <label for="DRL">Enter Drug Retail License Number:</label>
+                    <input type="text" id="DRL" name="DRL" placeholder="License-Number" required>
+                </div>
+                <div class="form-group">
+                    <label for="Address">Enter Address:</label>
+                    <input type="text" id="Address" name="Address" placeholder="ShopName,StreetName,City-Pincode"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label for="role">Select Role:</label>
+                    <select name="role" id="role">
+                        <option value="owner">Pharmacy Owner</option>
+                        <option value="staff">Staff</option>
+                    </select>
+                </div>
+                <span class="form-group">Terms and Conditions:
+                    <input type="checkbox">
+                </span>
+                <div class="btns">
+                    <button type="submit" class="submitbtn">Submit</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+
+</html>
