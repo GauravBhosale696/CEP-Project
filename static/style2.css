@@ -6,6 +6,7 @@
 
 body {
     background-color: rgb(217, 217, 217);
+    font-family: 'Poppins', sans-serif;
 }
 
 nav {
@@ -16,9 +17,32 @@ nav {
     background-color: #00529B;
 }
 
-nav .about-us-header {
-    color: white;
+nav .left {
+    color: #00B470;
     font-size: 2rem;
+    font-weight: 600;
+}
+
+nav ul {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+nav ul li {
+    list-style: none;
+}
+
+nav ul a {
+    text-decoration: none;
+    color: #00B470;
+    transition: color 0.3s ease;
+    font-size: 1.25rem;
+    font-weight: 100
+}
+
+nav ul a:hover {
+    color: #FFFFFF;
 }
 
 .about-us-box {
@@ -30,27 +54,62 @@ nav .about-us-header {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-div h2{
+.right {
+    list-style: none;
+}
+
+div h2 {
     color: #00529B;
     margin-top: 20px;
 }
-div p{
+
+div p {
     line-height: 1.6;
     margin-bottom: 15px;
     font-size: 1.1rem;
 }
-.team{
+
+.team {
     display: flex;
     justify-content: space-evenly;
     align-items: center;
-    
-}
-.team-member{
-    width: 150px;
-    border-radius: 10px;
-    color: white;
-    padding: 15px;
-    background: #00B470;
+
 }
 
+.team-member {
+    position: relative;
+    height: 20px;
+    background: linear-gradient(35deg, #00529B, #00B470);
+    color: white;
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+    font-size: 18px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.team-member::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(120deg,
+            rgba(255, 255, 255, 0.2),
+            rgba(255, 255, 255, 0.05));
+    transform: rotate(25deg);
+    animation: shine 3s infinite linear;
+}
+@keyframes shine {
+    0% {
+        transform: translateX(-100%) rotate(90deg);
+    }
+
+    100% {
+        transform: translateX(100%) rotate(270deg);
+    }
+}
 /*For registration*/

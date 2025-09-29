@@ -71,6 +71,69 @@ nav ul a:hover {
     box-shadow: 0 4px 10px;
 }
 
+.content {
+    display: block;
+    border: 2px solid #003366;
+    padding: 20px 40px;
+    max-width: 1000px;
+    margin: 60px auto;
+    border-radius: 12px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.15);
+    line-height: 1.6;
+    background: #f9fbff;
+    animation: fadeSlideUp 1s ease-out;
+    /* entrance animation */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* subtle hover effect */
+.content:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.content h2,
+.content h3 {
+    text-align: center;
+    color: #00529B;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeIn 1.2s ease forwards;
+}
+
+.content p,
+.content ul {
+    opacity: 0;
+    animation: fadeIn 1.2s ease forwards;
+    animation-delay: 0.5s;
+    /* stagger effect */
+}
+
+/* keyframes for smooth animations */
+@keyframes fadeSlideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+
+
 /* login page*/
 .loginbox {
     display: flex;
@@ -91,11 +154,12 @@ form {
     font-family: 'Poppins', sans-serif;
 }
 
-form h2{
+form h2 {
     display: flex;
     justify-content: center;
 }
-form a{
+
+form a {
     display: flex;
     justify-content: center;
     text-decoration: none;
@@ -140,4 +204,40 @@ form a{
 
 .submitbtn:hover {
     transform: scale(1.05);
+}
+
+/*Form Container*/
+.form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #003366;
+    padding: 20px;
+    max-width: 700px;
+    margin: auto;
+    border-radius: 8px;
+    flex-direction: column;
+    margin-top: 100px;
+    box-shadow: 0 4px 10px;
+}
+
+.form-container .submitbtn {
+    border: 2px solid #003366;
+    background-color: #00B470;
+    color: #00529B;
+    font-family: 'Poppins', sans-serif;
+    height: 35px;
+    width: 100px;
+    font-size: 1rem;
+    transition: transform 0.2s ease;
+    cursor: pointer;
+    border-radius: 6px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: color 1s ease;
+}
+
+.form-container .submitbtn:hover {
+    color: white;
 }
