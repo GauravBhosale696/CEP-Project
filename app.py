@@ -87,17 +87,18 @@ def login():
         password = request.form['password']
 
         user = Owner.query.filter_by(owner_username=username).first()
-
-        # Check if the user exists and the hashed password matches
         if user and check_password_hash(user.owner_password, password):
             session['logged_in'] = True
             session['username'] = user.owner_username
             flash(f"Welcome back, {user.owner_name}!", 'success')
-            return redirect(url_for('dashboard')) # Redirect to the dashboard
+            return redirect(url_for('dashboard'))
         else:
             flash("Invalid username or password", 'danger')
-    
+            return redirect(url_for('login'))
+        
+
     return render_template("login_page.html")
+
 
 @app.route('/dashboard')
 def dashboard():

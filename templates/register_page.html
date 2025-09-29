@@ -13,12 +13,14 @@
         <nav>
             <div class="left">MEDI-TRACK</div>
             <div class="right">
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="login_page.html">Login</a></li>
-                    <li><a href="about-us.html">About Us</a></li>
-                    <li><a href="#">Contact</a></li>
+                <div class="right">
+               <ul>
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                    <li><a href="{{ url_for('about_us') }}">About Us</a></li>
+                    <li><a href="{{ url_for('contact') }}">Contact</a></li>
                 </ul>
+            </div>
             </div>
         </nav>
     </header>

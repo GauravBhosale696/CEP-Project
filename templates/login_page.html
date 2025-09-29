@@ -14,29 +14,29 @@
         <nav>
             <div class="left">MEDI-TRACK</div>
             <div class="right">
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="login_page.html">Login</a></li>
-                    <li><a href="about-us.html">About Us</a></li>
-                    <li><a href="#">Contact</a></li>
+                 <ul>
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                    <li><a href="{{ url_for('about_us') }}">About Us</a></li>
+                    <li><a href="{{ url_for('contact') }}">Contact</a></li>
                 </ul>
             </div>
         </nav>
     </header>
     <main>
         <div class="loginbox">
-            <form method="POST" , action="/login">
+            <form method="POST" , action="{{ url_for('login') }}">
                 <h2>Medi-Track Login</h2>
 
                 <div class="form-group">
                     <label for="name">Enter UserName:</label>
-                    <input type="text" id="name" name="name" placeholder="UserName" required>
+                    <input type="text" id="username" name="username" placeholder="UserName" required>
                 </div>
-
+                <!--
                 <div class="form-group">
                     <label for="email">Enter Email:</label>
                     <input type="email" id="email" name="email" placeholder="owner@example.com" required>
-                </div>
+                </div>-->
 
                 <div class="form-group">
                     <label for="password">Enter Password:</label>
@@ -45,12 +45,12 @@
 
                 <div class="btns">
                    
-                        <button type="submit" class="submitbtn"><a href="dashboard.html">Login</a></button>
+                        <button type="submit" class="submitbtn">Login</button>
                     
                     <button type="reset" class="submitbtn">Reset</button>
                 </div>
 
-                <a href="/register">New User? Register</a>
+                <a href="{{ url_for('register') }}">New User? Register</a>
             </form>
         </div>
 
