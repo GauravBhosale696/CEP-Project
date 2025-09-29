@@ -12,15 +12,20 @@
     <header>
         <nav>
             <div class="nav-center">MEDI-TRACK DASHBOARD</div>
+            <div class="right">
+                <ul>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </div>
         </nav>
     </header>
     <main>
         <div class="mainbox">
             <div class="box1">
-                ENTER STOCK
+                <a href="{{ url_for('add_stock') }}">ADD_STOCK</a>
             </div>
             <div class="box1">
-                VIEW STOCK
+                <a href="{{ url_for('display_stock') }}">VIEW STOCK</a>
             </div>
             <div class="box1">
                 UPDATE STOCK

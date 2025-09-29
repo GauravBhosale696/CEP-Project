@@ -3,18 +3,19 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secure-and-random-key' # !! CHANGE THIS !!
+# In your app.py file
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'a-very-long-and-random-string-of-characters-that-you-will-not-guess'
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///login.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# The User model is renamed for clarity and includes unique=True for
-# username and email to prevent duplicates.
 class Owner(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     owner_name = db.Column(db.String(200), nullable=False)
     owner_mail = db.Column(db.String(200), nullable=False, unique=True)
-    owner_phone = db.Column(db.String(15), nullable=False) # Phone numbers should be strings
+    owner_phone = db.Column(db.String(15), nullable=False) 
     owner_username = db.Column(db.String(200), nullable=False, unique=True)
     owner_password = db.Column(db.String(200), nullable=False)
     phar_name = db.Column(db.String(200), nullable=False)
@@ -32,7 +33,6 @@ def index():
 def about_us():
     return render_template('about-us.html')
 
-# Create a simple route for the contact page
 @app.route('/contact')
 def contact():
     return render_template('contact.html')
@@ -40,7 +40,6 @@ def contact():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # Mapped form names directly to model attributes
         owner_name = request.form['name']
         owner_mail = request.form['email']
         owner_phone = request.form['phone']
@@ -50,19 +49,14 @@ def register():
         phar_lic_num = request.form['DRL']
         phar_add = request.form['Address']
 
-        # Hashing the password for security
         hashed_password = generate_password_hash(owner_password)
         
-        # Check for existing user or license number
         if Owner.query.filter_by(owner_username=owner_username).first():
-            flash('Username already exists. Please choose a different one.', 'danger')
             return redirect(url_for('register'))
         
         if Owner.query.filter_by(phar_lic_num=phar_lic_num).first():
-            flash('License number already registered.', 'danger')
             return redirect(url_for('register'))
 
-        # The names must match your model columns exactly
         new_owner = Owner(
             owner_name=owner_name,
             owner_mail=owner_mail,
@@ -75,8 +69,7 @@ def register():
         )
         db.session.add(new_owner)
         db.session.commit()
-        flash('Registration successful!', 'success')
-        return redirect(url_for('login')) # Redirect to the login page
+        return redirect(url_for('login')) 
     
     return render_template('register_page.html')
 
@@ -88,12 +81,10 @@ def login():
 
         user = Owner.query.filter_by(owner_username=username).first()
         if user and check_password_hash(user.owner_password, password):
-            session['logged_in'] = True
+            session['user_id'] = user.id
             session['username'] = user.owner_username
-            flash(f"Welcome back, {user.owner_name}!", 'success')
             return redirect(url_for('dashboard'))
         else:
-            flash("Invalid username or password", 'danger')
             return redirect(url_for('login'))
         
 
@@ -102,11 +93,53 @@ def login():
 
 @app.route('/dashboard')
 def dashboard():
-    if not session.get('logged_in'):
-        flash("Please log in to access the dashboard.", 'warning')
+    if 'user_id' not in session:
         return redirect(url_for('login'))
     
     return render_template("dashboard.html")
+
+class Medicine(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    expiry_date = db.Column(db.String(50), nullable=False)
+    owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'), nullable=False)
+    owner = db.relationship('Owner', backref=db.backref('medicines', lazy=True))
+
+@app.route('/add_stock', methods=['GET', 'POST'])
+def add_stock():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        name = request.form['name']
+        quantity = request.form['quantity']
+        expiry_date = request.form['expiry_date']
+
+        new_medicine = Medicine(
+            name=name,
+            quantity=quantity,
+            expiry_date=expiry_date,
+            owner_id=session['user_id']
+        )
+        db.session.add(new_medicine)
+        db.session.commit()
+    
+    return render_template('add_stock.html')
+
+@app.route('/display_stock')
+def display_stock():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    medicines = Medicine.query.filter_by(owner_id=session['user_id']).all()
+    
+    return render_template('display_stock.html', medicines=medicines)
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    return redirect(url_for('login'))
 
 if __name__ == "__main__":
     with app.app_context():
