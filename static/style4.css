@@ -85,3 +85,19 @@ nav {
     transition: font-size 0.3s ease;
 }
 
+.right ul li {
+    list-style: none;
+}
+
+.right ul a{
+    text-decoration: none;
+    color: white;
+    transition: color 0.3s ease;
+    font-size: 1.3rem;
+    transition: font-size 0.3s ease;
+}
+
+.right ul a:hover{
+    color: #00B470;
+    font-size: 1.4rem;
+}
