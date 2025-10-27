@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style5.css') }}">
+    <title>Delete Stock</title>
+</head>
+<body class="delete-page">
+    <header>
+        <nav>
+            <div class="nav-center">DELETE STOCK</div>
+            <div class="right">
+                <ul>
+                    <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="mainbox">
+            <form method="POST" action="{{ url_for('delete_stock') }}">
+                <div class="box1">
+                    <h2>Delete Stock Item</h2>
+                    <input type="text" name="medicine_name" placeholder="Enter Medicine Name" required>
+                    <button type="submit" class="btn">Delete</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html>
+

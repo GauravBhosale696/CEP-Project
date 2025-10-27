@@ -136,6 +136,60 @@ def display_stock():
     
     return render_template('display_stock.html', medicines=medicines)
 
+@app.route('/update_stock', methods=['GET', 'POST'])
+def update_stock():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        medicine_name = request.form['medicine_name'].strip()
+        new_quantity = request.form['new_quantity']
+
+        # Find the medicine that belongs to the logged-in user
+        medicine = Medicine.query.filter_by(
+            name=medicine_name,
+            owner_id=session['user_id']
+        ).first()
+
+        if medicine:
+            medicine.quantity = new_quantity
+            db.session.commit()
+            flash(f"{medicine_name} updated successfully!", "success")
+        else:
+            flash(f"{medicine_name} not found in your stock.", "error")
+
+        return redirect(url_for('display_stock'))
+
+    return render_template('update_stock.html')
+
+
+@app.route('/delete_stock', methods=['GET', 'POST'])
+def delete_stock():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        medicine_name = request.form['medicine_name'].strip()
+
+        # Find the medicine and delete it
+        medicine = Medicine.query.filter_by(
+            name=medicine_name,
+            owner_id=session['user_id']
+        ).first()
+
+        if medicine:
+            db.session.delete(medicine)
+            db.session.commit()
+            flash(f"{medicine_name} deleted successfully!", "success")
+        else:
+            flash(f"{medicine_name} not found in your stock.", "error")
+
+        return redirect(url_for('display_stock'))
+
+    return render_template('delete_stock.html')
+
+
+
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
