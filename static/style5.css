@@ -113,13 +113,13 @@ body.update-page .btn:hover {
 
 /*Delete Page*/
 body.delete-page .box1 {
-  background: linear-gradient(135deg, #9B0000, #FF4B4B);
+  background: linear-gradient(135deg, #00529B, #00B470);
 }
 
 body.delete-page .btn {
-  background-color: crimson;
+  background-color:  #00B470;
 }
 
 body.delete-page .btn:hover {
-  background-color: #a80000;
+  background-color: #008a55;
 }
