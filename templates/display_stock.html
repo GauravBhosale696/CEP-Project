@@ -7,17 +7,42 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         .inventory-table {
-            width: 80%;
+            width: 90%; /* Increased width for better display */
             margin: 20px auto;
             border-collapse: collapse;
         }
         .inventory-table th, .inventory-table td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 10px;
             text-align: left;
         }
         .inventory-table th {
             background-color: #f2f2f2;
+            color: #333;
+        }
+        /* New CSS for Expiry Alerts */
+        .expired {
+            background-color: #ffcccc; /* Light Red */
+            font-weight: bold;
+        }
+        .expiring-soon {
+            background-color: #ffefb3; /* Light Yellow */
+        }
+        .flash-messages {
+            width: 90%;
+            margin: 10px auto;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
@@ -35,21 +60,40 @@
     </header>
     <main>
         <div class="form-container">
-            <h2>Current Inventory</h2>
+            <h2>Current Inventory & Expiry Alerts</h2>
+            
+            {% for category, message in messages %}
+                <div class="flash-messages alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+
             <table class="inventory-table">
                 <thead>
                     <tr>
                         <th>Medicine Name</th>
                         <th>Quantity</th>
                         <th>Expiry Date</th>
+                        <th>Days Until Expiry</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for medicine in medicines %}
-                    <tr>
+                    <tr class="{{ medicine.alert_class }}">
                         <td>{{ medicine.name }}</td>
                         <td>{{ medicine.quantity }}</td>
                         <td>{{ medicine.expiry_date }}</td>
+                        <td>
+                            {% if medicine.days_until_expiry == 0 %}
+                                EXPIRES TODAY!
+                            {% elif medicine.days_until_expiry < 0 %}
+                                **EXPIRED** ({{ -medicine.days_until_expiry }} days ago)
+                            {% elif medicine.days_until_expiry <= 90 %}
+                                {{ medicine.days_until_expiry }} days (Alert!)
+                            {% else %}
+                                {{ medicine.days_until_expiry }} days
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

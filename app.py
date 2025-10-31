@@ -1,9 +1,7 @@
-from flask import Flask, flash, session, request, render_template, redirect, url_for
+from flask import Flask, flash, session, request, render_template, redirect, url_for, get_flashed_messages
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-
-app = Flask(__name__)
-# In your app.py file
+from datetime import datetime, timedelta 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-very-long-and-random-string-of-characters-that-you-will-not-guess'
@@ -24,7 +22,71 @@ class Owner(db.Model):
 
     def __repr__(self):
         return f'<Owner {self.owner_username}>'
+
+class Medicine(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    expiry_date = db.Column(db.String(50), nullable=False)
+    owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'), nullable=False)
+    owner = db.relationship('Owner', backref=db.backref('medicines', lazy=True))
+
+def delete_expired_stock(owner_id):
+    """Deletes all medicine records belonging to a specific owner that have expired."""
+    today = datetime.now().date()
     
+    medicines = Medicine.query.filter_by(owner_id=owner_id).all()
+    deleted_count = 0
+    
+    for medicine in medicines:
+        try:
+            # Convert 'yyyy-mm-dd' string to date object
+            expiry = datetime.strptime(medicine.expiry_date, '%Y-%m-%d').date()
+            
+            # Check if the medicine has expired (expiry date is today or earlier)
+            if expiry <= today:
+                db.session.delete(medicine)
+                deleted_count += 1
+
+        except ValueError:
+            # Skip items with bad date format
+            continue
+    
+    if deleted_count > 0:
+        db.session.commit()
+        return f'{deleted_count} expired medicine(s) have been automatically removed from your stock.'
+    
+    return None # Returns None if no items were deleted
+
+def get_dashboard_alerts(owner_id):
+    """Calculates counts for expiring stock and low stock items."""
+    medicines = Medicine.query.filter_by(owner_id=owner_id).all()
+    
+    today = datetime.now().date()
+    expiring_soon_count = 0
+    low_stock_count = 0
+    LOW_STOCK_THRESHOLD = 10 # Define the threshold for low stock
+
+    for medicine in medicines:
+        # Check for Expiry Alert (Expired or within 90 days)
+        try:
+            expiry = datetime.strptime(medicine.expiry_date, '%Y-%m-%d').date()
+            days_until_expiry = (expiry - today).days
+            
+            if days_until_expiry <= 90:
+                expiring_soon_count += 1
+        except ValueError:
+            pass
+
+        # Check for Low Stock Alert
+        if medicine.quantity <= LOW_STOCK_THRESHOLD:
+            low_stock_count += 1
+
+    return {
+        'expiring_count': expiring_soon_count,
+        'low_stock_count': low_stock_count
+    }
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -52,9 +114,11 @@ def register():
         hashed_password = generate_password_hash(owner_password)
         
         if Owner.query.filter_by(owner_username=owner_username).first():
+            flash('Username already exists!', 'error')
             return redirect(url_for('register'))
         
         if Owner.query.filter_by(phar_lic_num=phar_lic_num).first():
+            flash('License Number already registered!', 'error')
             return redirect(url_for('register'))
 
         new_owner = Owner(
@@ -69,6 +133,7 @@ def register():
         )
         db.session.add(new_owner)
         db.session.commit()
+        flash('Registration successful! Please log in.', 'success')
         return redirect(url_for('login')) 
     
     return render_template('register_page.html')
@@ -83,8 +148,10 @@ def login():
         if user and check_password_hash(user.owner_password, password):
             session['user_id'] = user.id
             session['username'] = user.owner_username
+            flash(f'Welcome back, {user.owner_username}!', 'success')
             return redirect(url_for('dashboard'))
         else:
+            flash('Invalid username or password.', 'error')
             return redirect(url_for('login'))
         
 
@@ -96,15 +163,16 @@ def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    return render_template("dashboard.html")
+    # 1. OPTIONAL: Automatically delete expired stock upon login
+    message = delete_expired_stock(session['user_id'])
+    if message:
+        flash(message, 'info')
+    
+    # 2. Calculate and fetch alert metrics for the dashboard display
+    alerts = get_dashboard_alerts(session['user_id'])
 
-class Medicine(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    expiry_date = db.Column(db.String(50), nullable=False)
-    owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'), nullable=False)
-    owner = db.relationship('Owner', backref=db.backref('medicines', lazy=True))
+    return render_template("dashboard.html", alerts=alerts)
+
 
 @app.route('/add_stock', methods=['GET', 'POST'])
 def add_stock():
@@ -112,9 +180,15 @@ def add_stock():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        name = request.form['name']
+        name = request.form['name'].strip()
         quantity = request.form['quantity']
         expiry_date = request.form['expiry_date']
+
+        try:
+            quantity = int(quantity)
+        except ValueError:
+            flash('Quantity must be a valid number.', 'error')
+            return redirect(url_for('add_stock'))
 
         new_medicine = Medicine(
             name=name,
@@ -124,6 +198,8 @@ def add_stock():
         )
         db.session.add(new_medicine)
         db.session.commit()
+        flash(f'{name} added to stock successfully!', 'success')
+        return redirect(url_for('display_stock'))
     
     return render_template('add_stock.html')
 
@@ -131,10 +207,57 @@ def add_stock():
 def display_stock():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
+    # We call delete_expired_stock here too for immediate cleanup when viewing stock
+    message = delete_expired_stock(session['user_id'])
+    if message:
+        flash(message, 'info')
 
+    # --- NEW LOGIC TO HANDLE DASHBOARD LINKS ---
+    alert_type = request.args.get('alert') # Get the alert parameter from the URL
+    
     medicines = Medicine.query.filter_by(owner_id=session['user_id']).all()
     
-    return render_template('display_stock.html', medicines=medicines)
+    today = datetime.now().date()
+    filtered_medicines = []
+    LOW_STOCK_THRESHOLD = 10 # Must match the threshold used in get_dashboard_alerts
+
+    for medicine in medicines:
+        is_expiring = False
+        is_low_stock = medicine.quantity <= LOW_STOCK_THRESHOLD
+
+        try:
+            expiry = datetime.strptime(medicine.expiry_date, '%Y-%m-%d').date()
+            days_until_expiry = (expiry - today).days
+            
+            medicine.alert_class = ''
+            if days_until_expiry <= 0:
+                medicine.alert_class = 'expired'
+                is_expiring = True
+            elif days_until_expiry <= 90:
+                medicine.alert_class = 'expiring-soon'
+                is_expiring = True
+            
+            medicine.days_until_expiry = days_until_expiry
+
+        except ValueError:
+            medicine.alert_class = 'date-error'
+            medicine.days_until_expiry = 'N/A'
+        
+        # Filter the results based on the URL parameter
+        if alert_type == 'expiry' and is_expiring:
+            filtered_medicines.append(medicine)
+        elif alert_type == 'low_stock' and is_low_stock:
+            filtered_medicines.append(medicine)
+        elif not alert_type:
+            # If no alert parameter, show all medicines
+            filtered_medicines.append(medicine)
+
+    flashed_messages = get_flashed_messages(with_categories=True)
+    
+    # Pass the filtered list to the template
+    return render_template('display_stock.html', medicines=filtered_medicines, messages=flashed_messages)
+
 
 @app.route('/update_stock', methods=['GET', 'POST'])
 def update_stock():
@@ -145,54 +268,77 @@ def update_stock():
         medicine_name = request.form['medicine_name'].strip()
         new_quantity = request.form['new_quantity']
 
-        # Find the medicine that belongs to the logged-in user
+        try:
+            new_quantity = int(new_quantity)
+        except ValueError:
+            flash('Quantity must be a valid number.', 'error')
+            return redirect(url_for('update_stock'))
+
         medicine = Medicine.query.filter_by(
             name=medicine_name,
             owner_id=session['user_id']
         ).first()
 
         if medicine:
-            medicine.quantity = new_quantity
-            db.session.commit()
-            flash(f"{medicine_name} updated successfully!", "success")
+            if new_quantity >= 0:
+                medicine.quantity = new_quantity
+                db.session.commit()
+                flash(f"Quantity for {medicine_name} updated successfully to {new_quantity}!", "success")
+            else:
+                flash("Quantity cannot be negative.", "error")
         else:
-            flash(f"{medicine_name} not found in your stock.", "error")
+            flash(f"'{medicine_name}' not found in your stock.", "error")
 
-        return redirect(url_for('display_stock'))
+        return redirect(url_for('update_stock'))
 
-    return render_template('update_stock.html')
+    flashed_messages = get_flashed_messages(with_categories=True)
+    return render_template('update_stock.html', messages=flashed_messages)
 
 
-@app.route('/delete_stock', methods=['GET', 'POST'])
-def delete_stock():
+@app.route('/billing', methods=['GET', 'POST'])
+def billing():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
     if request.method == 'POST':
         medicine_name = request.form['medicine_name'].strip()
+        sold_quantity = request.form['sold_quantity']
 
-        # Find the medicine and delete it
+        try:
+            sold_quantity = int(sold_quantity)
+            if sold_quantity <= 0:
+                 flash("Sold quantity must be positive.", "error")
+                 return redirect(url_for('billing'))
+        except ValueError:
+            flash('Sold quantity must be a valid number.', 'error')
+            return redirect(url_for('billing'))
+
+
         medicine = Medicine.query.filter_by(
             name=medicine_name,
             owner_id=session['user_id']
         ).first()
 
         if medicine:
-            db.session.delete(medicine)
-            db.session.commit()
-            flash(f"{medicine_name} deleted successfully!", "success")
+            if medicine.quantity >= sold_quantity:
+                medicine.quantity -= sold_quantity
+                db.session.commit()
+                flash(f"Sale recorded: {sold_quantity} units of {medicine_name}. Remaining stock: {medicine.quantity}.", "success")
+            else:
+                flash(f"Insufficient stock for {medicine_name}. Only {medicine.quantity} units available.", "error")
         else:
-            flash(f"{medicine_name} not found in your stock.", "error")
+            flash(f"'{medicine_name}' not found in stock. Cannot process sale.", "error")
 
-        return redirect(url_for('display_stock'))
+        return redirect(url_for('billing'))
 
-    return render_template('delete_stock.html')
-
+    flashed_messages = get_flashed_messages(with_categories=True)
+    return render_template('billing_page.html', messages=flashed_messages)
 
 
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
+    flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
 if __name__ == "__main__":

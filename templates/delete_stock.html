@@ -21,6 +21,14 @@
 
     <main>
         <div class="mainbox">
+            {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-messages alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+            {% endif %}
+            
             <form method="POST" action="{{ url_for('delete_stock') }}">
                 <div class="box1">
                     <h2>Delete Stock Item</h2>
@@ -32,4 +40,3 @@
     </main>
 </body>
 </html>
-

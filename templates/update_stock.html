@@ -18,20 +18,28 @@
             </div>
         </nav>
     </header>
-
-    <main>
-        <div class="mainbox">
-            <form method="POST" action="{{ url_for('update_stock') }}">
-                <div class="box1">
-                    <h2>Update Stock Details</h2>
-                    <input type="text" name="medicine_name" placeholder="Enter Medicine Name" required>
-                    <input type="number" name="new_quantity" placeholder="Enter New Quantity" required>
-                    <button type="submit" class="btn">Update</button>
+<main>
+        <div class="content-wrapper"> 
+            
+            {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-messages alert-{{ category }}">
+                    {{ message }}
                 </div>
-            </form>
+            {% endfor %}
+            {% endif %}
+
+            <div class="mainbox">
+                <form method="POST" action="{{ url_for('update_stock') }}">
+                    <div class="box1">
+                        <h2>Update Stock Details</h2>
+                        <input type="text" name="medicine_name" placeholder="Enter Medicine Name" required>
+                        <input type="number" name="new_quantity" placeholder="Enter New Quantity" required>
+                        <button type="submit" class="btn">Update</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </main>
 </body>
 </html>
-
-

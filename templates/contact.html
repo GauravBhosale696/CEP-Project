@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+    <title>Contact Us</title>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="left">MEDI-TRACK</div>
+            <div class="right">
+                <ul>
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                    <li><a href="{{ url_for('about_us') }}">About Us</a></li>
+                    <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <div class="about-us-box">
+            <h2>Contact MEDI-TRACK Support</h2>
+            <p>
+                We're here to help you manage your medical inventory efficiently.
+                If you have any questions, feedback, or need technical support, please reach out to us.
+            </p>
+
+            <h3>General Enquiries</h3>
+            <p>
+                <strong>Email:</strong> support@meditrack.com
+            </p>
+
+            <h3>Technical Support</h3>
+            <p>
+                <strong>Phone:</strong> +91 98765 43210 (Available 9 AM - 5 PM IST)
+            </p>
+
+            <h3>Our Address</h3>
+            <p>
+                MEDI-TRACK Solutions,
+                Innovation Hub, Pune, Maharashtra - 411001
+            </p>
+        </div>
+    </main>
+</body>
+
+</html>

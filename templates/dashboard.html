@@ -6,6 +6,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style4.css') }}">
     <title>Dashboard</title>
+    <style>
+        .alert-box {
+            background: linear-gradient(135deg, #00B470, #00529B); /* Using colors from your theme */
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px; /* Space between the alert rows */
+        }
+        .alert-box h3 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        .alert-box .value {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+        .alert-box .action-link {
+            color: #ffcc00; /* Yellow/Gold for high-contrast link */
+            text-decoration: none;
+            font-weight: 600;
+            display: block; /* Makes the link take its own line */
+            margin-top: 10px;
+        }
+        /* Style for the main action buttons grid */
+        .action-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+        .mainbox { /* Re-purposing the mainbox style for the grid container */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+            margin: auto;
+        }
+    </style>
 </head>
 
 <body>
@@ -14,24 +56,43 @@
             <div class="nav-center">MEDI-TRACK DASHBOARD</div>
             <div class="right">
                 <ul>
-                    <li><a href="{{ url_for('login') }}">Logout</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 </ul>
             </div>
         </nav>
     </header>
     <main>
         <div class="mainbox">
-            <div class="box1">
-                <a href="{{ url_for('add_stock') }}">ADD STOCK</a>
+            
+            <div class="alert-box">
+                <h3>Medicines Expiring Soon (or Expired)</h3>
+                <p class="value">{{ alerts.expiring_count }}</p>
+                <a href="{{ url_for('display_stock') }}?alert=expiry" class="action-link">
+                    Click to View Details in Stock
+                </a>
             </div>
-            <div class="box1">
-                <a href="{{ url_for('display_stock') }}">VIEW STOCK</a>
+
+            <div class="alert-box">
+                <h3>Low Stock Items (Quantity < 10)</h3>
+                <p class="value">{{ alerts.low_stock_count }}</p>
+                <a href="{{ url_for('display_stock') }}?alert=low_stock" class="action-link">
+                    Click to View Details in Stock
+                </a>
             </div>
-            <div class="box1">
-                <a href="{{ url_for('update_stock') }}">UPDATE STOCK</a>
-            </div>
-            <div class="box1">
-                <a href="{{ url_for('delete_stock') }}">DELETE STOCK</a>
+
+            <div class="action-buttons-grid">
+                <div class="box1">
+                    <a href="{{ url_for('add_stock') }}">ADD STOCK</a>
+                </div>
+                <div class="box1">
+                    <a href="{{ url_for('display_stock') }}">VIEW FULL STOCK</a>
+                </div>
+                <div class="box1">
+                    <a href="{{ url_for('update_stock') }}">UPDATE STOCK</a>
+                </div>
+                <div class="box1">
+                    <a href="{{ url_for('billing') }}">BILLING</a>
+                </div>
             </div>
 
         </div>
