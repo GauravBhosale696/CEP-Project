@@ -4,8 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style5.css') }}">
-    <title>Process Sale</title>
+    <title>Billing Software</title>
+    <style>
+        /* Specific CSS to match the image layout */
+        .billing-container {
+            display: flex;
+            width: 100%;
+            max-width: 1100px;
+            margin: auto;
+            background-color: white; /* Temporary background */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .left-panel {
+            flex: 1;
+            padding: 20px;
+            background-color: #006400; /* Dark Green */
+            color: white;
+            border-radius: 10px 0 0 10px;
+        }
+        .right-panel {
+            flex: 1;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 0 10px 10px 0;
+            background-color: #f9f9f9;
+        }
+        .customer-details, .product-details {
+            padding: 10px 0;
+            border-bottom: 1px solid #004d00;
+            margin-bottom: 20px;
+        }
+        .form-group-inline {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .form-group-inline input, .form-group-inline select {
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+        }
+        .bill-area {
+            height: 400px;
+            border: 2px inset #ccc;
+            padding: 10px;
+            overflow-y: auto;
+            white-space: pre-wrap; /* Preserve formatting for bill text */
+            font-family: monospace;
+            background-color: white;
+            color: black;
+        }
+        .bill-action-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .bill-action-btns .btn {
+            background-color: #388e3c;
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+        }
+        .bill-action-btns .btn:hover {
+            background-color: #2e7d32;
+        }
+        .bill-action-btns #clear-btn {
+            background-color: #a1a1a1;
+        }
+        .bill-action-btns #clear-btn:hover {
+            background-color: #888888;
+        }
+    </style>
 </head>
+
 <body class="billing-page">
     <header>
         <nav>
@@ -19,34 +92,214 @@
         </nav>
     </header>
 
-   <main>
-    <div class="content-wrapper">
-        {% if messages %}
-        {% for category, message in messages %}
-            <div class="flash-messages alert-{{ category }}">
-                {{ message }}
-            </div>
-        {% endfor %}
-        {% endif %}
-
-        <div class="mainbox">
-            <form method="POST" action="{{ url_for('billing') }}">
-                <div class="box1">
-                    <h2>Process New Sale</h2>
-                    <input type="text" name="medicine_name" placeholder="Enter Medicine Name" required>
-                    <input type="number" name="sold_quantity" placeholder="Quantity Sold" required min="1">
-                    <button type="submit" class="btn">Complete Sale & Update Stock</button>
+    <main>
+        <div class="content-wrapper">
+            {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-messages alert-{{ category }}">
+                    {{ message }}
                 </div>
-            </form>
-            
-            <p style="text-align: center; margin-top: 15px;">
-                <a href="{{ url_for('display_stock') }}">
-                    Check current stock availability
-                </a>
-            </p>
-            
+            {% endfor %}
+            {% endif %}
+
+            <div class="billing-container">
+                <div class="left-panel">
+                    <h2>MEDI-TRACK</h2>
+                    
+                    <div class="customer-details">
+                        <h3>Customer Details</h3>
+                        <div class="form-group-inline">
+                            <label for="customer_name">Customer Name:</label>
+                            <input type="text" id="customer_name" name="customer_name" required>
+                        </div>
+                        <div class="form-group-inline">
+                            <label for="customer_phone">Phone No.:</label>
+                            <input type="text" id="customer_phone" name="customer_phone" maxlength="15">
+                        </div>
+                    </div>
+
+                    <div class="product-details">
+                        <h3>Product Details</h3>
+                        <div class="form-group-inline">
+                            <label for="medicine_select">Medicine Name:</label>
+                            <select id="medicine_select">
+                                <option value="" data-price="0" data-stock="0">-- Select Medicine --</option>
+                                {% for item in stock %}
+                                <option value="{{ item.id }}" 
+                                        data-price="{{ '%.2f'|format(item.selling_price) }}" 
+                                        data-stock="{{ item.quantity }}"
+                                        data-name="{{ item.name }}"
+                                        data-cost="{{ '%.2f'|format(item.cost_price) }}">
+                                    {{ item.name }} (Stock: {{ item.quantity }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group-inline">
+                            <label for="medicine_rate">Medicine Rate:</label>
+                            <input type="number" id="medicine_rate" value="0.00" readonly>
+                        </div>
+                        <div class="form-group-inline">
+                            <label for="medicine_quantity">Medicine Quantity:</label>
+                            <input type="number" id="medicine_quantity" value="1" min="1" max="1">
+                        </div>
+                        <button id="add_item_btn" class="btn">Add item</button>
+                    </div>
+
+                    <div class="bill-action-btns">
+                        <button id="generate_bill_btn" class="btn">Generate bill</button>
+                        <button id="clear_btn" class="btn">clear</button>
+                        <button class="btn" id="exit-btn">Exit</button>
+                    </div>
+                </div>
+
+                <div class="right-panel">
+                    <h3>Bill Area</h3>
+                    <div class="bill-area" id="bill_area">
+                        </div>
+                </div>
+            </div>
         </div>
-    </div>
-</main>
+    </main>
+
+    <form id="final_bill_form" method="POST" action="{{ url_for('billing') }}" style="display: none;">
+        <input type="hidden" name="customer_name_final" id="customer_name_final">
+        <input type="hidden" name="customer_phone_final" id="customer_phone_final">
+        <input type="hidden" name="bill_items_json" id="bill_items_json">
+        <input type="hidden" name="total_amount_final" id="total_amount_final">
+        <input type="hidden" name="bill_text_content" id="bill_text_content">
+    </form>
+
+
+<script>
+    let billItems = [];
+    let grandTotal = 0;
+    const BILL_NO = Math.floor(Math.random() * 9000) + 1000; // Random 4-digit bill number
+
+    // DOM Elements
+    const select = document.getElementById('medicine_select');
+    const rateInput = document.getElementById('medicine_rate');
+    const qtyInput = document.getElementById('medicine_quantity');
+    const addItemBtn = document.getElementById('add_item_btn');
+    const billArea = document.getElementById('bill_area');
+    const generateBillBtn = document.getElementById('generate_bill_btn');
+    const clearBtn = document.getElementById('clear_btn');
+
+    // --- UTILITY FUNCTIONS ---
+    function formatBillHeader() {
+        return (
+            `\n\t\t\tMEDI-TRACK PHARMACY\n` +
+            `Bill no.: ${BILL_NO}\n` +
+            `Customer name: ${document.getElementById('customer_name').value || 'N/A'}\n` +
+            `Phone no.: ${document.getElementById('customer_phone').value || 'N/A'}\n` +
+            `-----------------------------------------------------\n` +
+            `Product \tQTY \tPrice \tTOTAL\n` +
+            `-----------------------------------------------------\n`
+        );
+    }
+
+    function updateBillArea() {
+        let itemsText = billItems.map(item => {
+            const total = item.rate * item.qty;
+            // Pad the columns for clean output
+            return `${item.name.padEnd(15)}\t${String(item.qty).padEnd(4)}\t${String(item.rate).padEnd(6)}\t${total.toFixed(2)}`;
+        }).join('\n');
+
+        grandTotal = billItems.reduce((sum, item) => sum + (item.rate * item.qty), 0);
+
+        billArea.innerHTML = formatBillHeader() + itemsText +
+                             `\n-----------------------------------------------------\n` +
+                             `\t\t\t\t\tGrand Total: ${grandTotal.toFixed(2)}`;
+    }
+
+    // --- EVENT HANDLERS ---
+    select.addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        const rate = parseFloat(selected.dataset.price || 0).toFixed(2);
+        const stock = parseInt(selected.dataset.stock || 0);
+        
+        rateInput.value = rate;
+        qtyInput.max = stock;
+        qtyInput.value = 1; // Reset quantity
+        if (stock === 0) {
+            addItemBtn.disabled = true;
+            qtyInput.max = 0;
+        } else {
+            addItemBtn.disabled = false;
+        }
+    });
+
+    addItemBtn.addEventListener('click', function() {
+        const selected = select.options[select.selectedIndex];
+        const medId = selected.value;
+        const name = selected.dataset.name;
+        const rate = parseFloat(rateInput.value);
+        const cost = parseFloat(selected.dataset.cost);
+        const qty = parseInt(qtyInput.value);
+        const maxStock = parseInt(qtyInput.max);
+
+        if (!medId || qty <= 0 || qty > maxStock) {
+            alert("Please select a valid medicine and quantity within stock limits.");
+            return;
+        }
+
+        // Add item details to the array
+        billItems.push({ 
+            id: medId, 
+            name: name, 
+            rate: rate, 
+            cost: cost, 
+            qty: qty, 
+            total: rate * qty 
+        });
+
+        // Update the visual bill and clear the item selection inputs
+        updateBillArea();
+        
+        // Disable the ADD button if stock is now zero or less after deducting the quantity
+        selected.dataset.stock = maxStock - qty;
+        qtyInput.max = maxStock - qty;
+        if (maxStock - qty <= 0) {
+            select.selectedIndex = 0; // Clear selection
+            rateInput.value = 0.00;
+            qtyInput.value = 0;
+            addItemBtn.disabled = true;
+        }
+    });
+    
+    generateBillBtn.addEventListener('click', function() {
+        if (billItems.length === 0) {
+            alert("Bill is empty. Please add items.");
+            return;
+        }
+        
+        // Populate hidden form fields with final data
+        document.getElementById('customer_name_final').value = document.getElementById('customer_name').value;
+        document.getElementById('customer_phone_final').value = document.getElementById('customer_phone').value;
+        document.getElementById('bill_items_json').value = JSON.stringify(billItems);
+        document.getElementById('total_amount_final').value = grandTotal.toFixed(2);
+        document.getElementById('bill_text_content').value = billArea.innerHTML;
+
+        // Submit the final form to the Flask backend
+        document.getElementById('final_bill_form').submit();
+    });
+
+    clearBtn.addEventListener('click', function() {
+        // Simple page reload to reset everything
+        window.location.reload();
+    });
+
+    // Initialize the bill area with a welcome message
+    billArea.innerHTML = "\n\t\t\tWelcome\n" + formatBillHeader() + "\n\n\n\t\t\t\t\tGrand Total: 0.00";
+
+    // Add this to your existing JavaScript block in billing_page.html
+
+const exitBtn = document.getElementById('exit-btn');
+
+exitBtn.addEventListener('click', function() {
+    // Since this is plain JavaScript, the URL is clean and safe
+    window.location.href = "{{ url_for('dashboard') }}";
+});
+</script>
 </body>
 </html>

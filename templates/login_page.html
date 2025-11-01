@@ -24,6 +24,18 @@
         </nav>
     </header>
     <main>
+        <div class="flash-area" style="text-align: center; margin-top: 20px;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        </div>
+        
         <div class="loginbox">
             <form method="POST" , action="{{ url_for('login') }}">
                 <h2>Medi-Track Login</h2>

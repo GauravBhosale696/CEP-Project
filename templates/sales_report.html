@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales History Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* CSS to ensure the table is properly formatted and styled */
+        .report-table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .report-table th, .report-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .report-table th {
+            background-color: #00529B; /* Theme color for header */
+            color: white;
+            font-weight: 600;
+        }
+        .report-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .report-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        .total-row td {
+            font-weight: bold;
+            background-color: #e6f5ff; /* Light blue background */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="left">MEDI-TRACK</div>
+            <div class="right">
+                <ul>
+                    <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <div class="form-container" style="max-width: 1000px;">
+            <h2>Sales and Transaction History</h2>
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Bill ID</th>
+                        <th>Date & Time</th>
+                        <th>Customer Name</th>
+                        <th>Phone No.</th>
+                        <th>Total Amount (₹)</th>
+                        <th>Profit (₹)</th>
+                        <th>View Bill Content (.txt)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td>{{ sale.id }}</td>
+                        <td>{{ sale.transaction_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>{{ sale.customer_name or 'N/A' }}</td>
+                        <td>{{ sale.customer_phone or 'N/A' }}</td>
+                        <td>₹{{ "{:.2f}".format(sale.total_amount) }}</td>
+                        <td>₹{{ "{:.2f}".format(sale.total_amount - sale.total_cost) }}</td> 
+                        <td>
+                            <button class="view-bill-btn"
+                                    data-bill-content="{{ sale.bill_content }}"
+                                    style="padding: 5px 10px; background-color: #00B470; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td colspan="4" style="text-align: right;">GRAND TOTALS:</td>
+                        <td>₹{{ "{:.2f}".format(sales | sum(attribute='total_amount')) }}</td>
+                        <td>₹{{ "{:.2f}".format(sales | sum(attribute='total_amount') - sales | sum(attribute='total_cost')) }}</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            {% if not sales %}
+            <p style="text-align: center; margin-top: 20px; color: #555;">No sales transactions have been recorded yet.</p>
+            {% endif %}
+            
+        </div>
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.view-bill-btn');
+
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Retrieve the bill content safely from the data attribute
+                    const rawContent = this.getAttribute('data-bill-content');
+                    
+                    // Replace the escaped newlines ('\\n') with actual newlines ('\n') for the alert box
+                    const formattedContent = rawContent.replace(/\\n/g, '\n');
+                    
+                    alert('Bill Content:\n\n' + formattedContent);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -2,6 +2,8 @@ from flask import Flask, flash, session, request, render_template, redirect, url
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta 
+import json
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'a-very-long-and-random-string-of-characters-that-you-will-not-guess'
@@ -28,6 +30,12 @@ class Medicine(db.Model):
     name = db.Column(db.String(200), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     expiry_date = db.Column(db.String(50), nullable=False)
+    
+    # --- THESE NEW COLUMNS MUST BE PRESENT ---
+    cost_price = db.Column(db.Float, nullable=False)    
+    selling_price = db.Column(db.Float, nullable=False) 
+    # ----------------------------------------
+    
     owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'), nullable=False)
     owner = db.relationship('Owner', backref=db.backref('medicines', lazy=True))
 
@@ -86,6 +94,16 @@ def get_dashboard_alerts(owner_id):
         'expiring_count': expiring_soon_count,
         'low_stock_count': low_stock_count
     }
+
+class SaleTransaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'), nullable=False)
+    customer_name = db.Column(db.String(200), nullable=True)
+    customer_phone = db.Column(db.String(15), nullable=True)
+    total_amount = db.Column(db.Float, nullable=False)
+    total_cost = db.Column(db.Float, nullable=False, default=0.0)
+    transaction_date = db.Column(db.DateTime, default=datetime.utcnow)
+    bill_content = db.Column(db.String(5000), nullable=True) # Stores the text content of the final bill
 
 @app.route('/')
 def index():
@@ -183,25 +201,38 @@ def add_stock():
         name = request.form['name'].strip()
         quantity = request.form['quantity']
         expiry_date = request.form['expiry_date']
+        
+        cost_price = request.form['cost_price']
+        selling_price = request.form['selling_price']
 
         try:
             quantity = int(quantity)
+            cost_price = float(cost_price)
+            selling_price = float(selling_price)
         except ValueError:
-            flash('Quantity must be a valid number.', 'error')
+            flash('Quantity and prices must be valid numbers.', 'error')
             return redirect(url_for('add_stock'))
 
         new_medicine = Medicine(
             name=name,
             quantity=quantity,
             expiry_date=expiry_date,
+            cost_price=cost_price,         
+            selling_price=selling_price,   
             owner_id=session['user_id']
         )
         db.session.add(new_medicine)
         db.session.commit()
-        flash(f'{name} added to stock successfully!', 'success')
-        return redirect(url_for('display_stock'))
-    
-    return render_template('add_stock.html')
+        
+        # --- SIMPLIFIED FLASH MESSAGE ---
+        flash(f'{name} added to stock successfully!', 'success_popup')
+        
+        flashed_messages = get_flashed_messages(with_categories=True)
+        return render_template('add_stock.html', messages=flashed_messages)
+        
+    flashed_messages = get_flashed_messages(with_categories=True)
+    return render_template('add_stock.html', messages=flashed_messages)
+
 
 @app.route('/display_stock')
 def display_stock():
@@ -259,41 +290,16 @@ def display_stock():
     return render_template('display_stock.html', medicines=filtered_medicines, messages=flashed_messages)
 
 
-@app.route('/update_stock', methods=['GET', 'POST'])
-def update_stock():
+@app.route('/view_sales_report')
+def view_sales_report():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-
-    if request.method == 'POST':
-        medicine_name = request.form['medicine_name'].strip()
-        new_quantity = request.form['new_quantity']
-
-        try:
-            new_quantity = int(new_quantity)
-        except ValueError:
-            flash('Quantity must be a valid number.', 'error')
-            return redirect(url_for('update_stock'))
-
-        medicine = Medicine.query.filter_by(
-            name=medicine_name,
-            owner_id=session['user_id']
-        ).first()
-
-        if medicine:
-            if new_quantity >= 0:
-                medicine.quantity = new_quantity
-                db.session.commit()
-                flash(f"Quantity for {medicine_name} updated successfully to {new_quantity}!", "success")
-            else:
-                flash("Quantity cannot be negative.", "error")
-        else:
-            flash(f"'{medicine_name}' not found in your stock.", "error")
-
-        return redirect(url_for('update_stock'))
-
-    flashed_messages = get_flashed_messages(with_categories=True)
-    return render_template('update_stock.html', messages=flashed_messages)
-
+    
+    # Logic to fetch sales transactions from the SaleTransaction model
+    sales = SaleTransaction.query.filter_by(owner_id=session['user_id']).order_by(SaleTransaction.transaction_date.desc()).all()
+    
+    # Pass the list of sales transactions to the template
+    return render_template('sales_report.html', sales=sales)
 
 @app.route('/billing', methods=['GET', 'POST'])
 def billing():
@@ -301,39 +307,89 @@ def billing():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        medicine_name = request.form['medicine_name'].strip()
-        sold_quantity = request.form['sold_quantity']
-
+        # --- 1. Retrieve Data from Hidden Form ---
+        customer_name = request.form['customer_name_final']
+        customer_phone = request.form['customer_phone_final']
+        bill_items_json = request.form['bill_items_json']
+        total_amount = float(request.form['total_amount_final'])
+        bill_text_content = request.form['bill_text_content'].replace('\n', '\\n').replace('\r', '') # Escape newlines
+        
+        # Parse the item list
         try:
-            sold_quantity = int(sold_quantity)
-            if sold_quantity <= 0:
-                 flash("Sold quantity must be positive.", "error")
-                 return redirect(url_for('billing'))
-        except ValueError:
-            flash('Sold quantity must be a valid number.', 'error')
+            bill_items = json.loads(bill_items_json)
+        except json.JSONDecodeError:
+            flash("Error processing bill data: Invalid JSON format.", "error")
+            return redirect(url_for('billing'))
+        
+        if not bill_items:
+            flash("Cannot generate bill: no items recorded.", "error")
             return redirect(url_for('billing'))
 
+        # --- 2. Process Sales and Calculate Totals ---
+        stock_updated = True
+        total_revenue = 0.0
+        total_cost_of_goods_sold = 0.0 
+        
+        # Loop through each item in the bill to deduct stock and calculate costs/revenue
+        for item in bill_items:
+            medicine = Medicine.query.filter_by(
+                id=item['id'],
+                owner_id=session['user_id']
+            ).first()
 
-        medicine = Medicine.query.filter_by(
-            name=medicine_name,
-            owner_id=session['user_id']
-        ).first()
-
-        if medicine:
-            if medicine.quantity >= sold_quantity:
-                medicine.quantity -= sold_quantity
-                db.session.commit()
-                flash(f"Sale recorded: {sold_quantity} units of {medicine_name}. Remaining stock: {medicine.quantity}.", "success")
+            if medicine and medicine.quantity >= item['qty']:
+                medicine.quantity -= item['qty']
+                
+                # Accumulate costs and revenue
+                total_revenue += item['rate'] * item['qty']
+                total_cost_of_goods_sold += item['cost'] * item['qty'] 
             else:
-                flash(f"Insufficient stock for {medicine_name}. Only {medicine.quantity} units available.", "error")
-        else:
-            flash(f"'{medicine_name}' not found in stock. Cannot process sale.", "error")
+                # If stock check failed for any item, abort the transaction
+                flash(f"Stock error: Insufficient quantity for {item['name']}. Transaction aborted.", "error")
+                stock_updated = False
+                break
+        
+        if not stock_updated:
+            return redirect(url_for('billing'))
 
+        # --- 3. Save Transaction Record ---
+        new_transaction = SaleTransaction(
+            owner_id=session['user_id'],
+            customer_name=customer_name,
+            customer_phone=customer_phone,
+            total_amount=total_revenue,
+            total_cost=total_cost_of_goods_sold,
+            bill_content=bill_text_content
+        )
+        db.session.add(new_transaction)
+        db.session.commit()
+        
+        
+        # --- 4. Save Bill Copy as .txt File ---
+        bill_filename = f"bill_{new_transaction.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.txt"
+        
+        # Ensure a 'bills' directory exists in your project root
+        bills_dir = os.path.join(app.root_path, 'bills')
+        os.makedirs(bills_dir, exist_ok=True)
+        
+        bill_path = os.path.join(bills_dir, bill_filename)
+
+        with open(bill_path, 'w') as f:
+            f.write(bill_text_content.replace('\\n', '\n')) # Unescape newlines for the file content
+        
+        # --- 5. Flash Success Message ---
+        flash(f"Bill #{new_transaction.id} processed successfully! Total: ₹{total_amount:.2f}. Bill saved as {bill_filename}.", "success")
         return redirect(url_for('billing'))
 
-    flashed_messages = get_flashed_messages(with_categories=True)
-    return render_template('billing_page.html', messages=flashed_messages)
+    # --- GET request logic (for initial page load) ---
+    
+    # FIFO SUGGESTION: Order the stock by expiry_date ascending (oldest date first)
+    available_stock = Medicine.query.filter_by(owner_id=session['user_id']).order_by(Medicine.expiry_date.asc()).all()
 
+    flashed_messages = get_flashed_messages(with_categories=True)
+    return render_template('billing_page.html', 
+                           messages=flashed_messages,
+                           stock=available_stock)
 
 @app.route('/logout')
 def logout():

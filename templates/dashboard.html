@@ -62,10 +62,23 @@
         </nav>
     </header>
     <main>
+
+        <div class="flash-area" style="text-align: center; margin-bottom: 20px;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}" style="padding: 10px; background-color: #e3f2fd; border-radius: 5px;">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        </div>
+
         <div class="mainbox">
             
             <div class="alert-box">
-                <h3>Medicines Expiring Soon (or Expired)</h3>
+                <h3>Medicines Expiring Soon</h3>
                 <p class="value">{{ alerts.expiring_count }}</p>
                 <a href="{{ url_for('display_stock') }}?alert=expiry" class="action-link">
                     Click to View Details in Stock
@@ -88,7 +101,7 @@
                     <a href="{{ url_for('display_stock') }}">VIEW FULL STOCK</a>
                 </div>
                 <div class="box1">
-                    <a href="{{ url_for('update_stock') }}">UPDATE STOCK</a>
+                    <a href="{{ url_for('view_sales_report') }}">SALES HISTORY</a>
                 </div>
                 <div class="box1">
                     <a href="{{ url_for('billing') }}">BILLING</a>

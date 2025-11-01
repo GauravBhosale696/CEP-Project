@@ -5,6 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add New Stock</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* New CSS for button grouping */
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .submitbtn {
+            flex-grow: 1; /* Allows both buttons to share space evenly */
+        }
+        .view-stock-btn {
+            /* Style to look like the submit button */
+            display: block;
+            flex-grow: 1;
+            text-align: center;
+            padding: 10px 15px;
+            border-radius: 5px;
+            background-color: #007bff; /* A different color for differentiation */
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: none;
+        }
+        .view-stock-btn:hover {
+            background-color: #0056b3;
+        }
+        
+        /* Style for the success notification box (re-using old styles) */
+        .success-notification {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #d4edda; /* Light green */
+            color: #155724; /* Dark green text */
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            margin: 0 auto 20px auto;
+            border-radius: 8px;
+            max-width: 500px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -19,6 +65,22 @@
         </nav>
     </header>
     <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'success_popup' %}
+                    <div class="success-notification">
+                        ✅ {{ message }}
+                    </div>
+                {% else %}
+                    <div class="alert alert-{{ category }}" style="max-width: 500px; margin: 0 auto 20px auto;">
+                        {{ message }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
         <div class="form-container">
             <h2>Add New Medicine</h2>
             <form method="POST" action="{{ url_for('add_stock') }}">
@@ -30,11 +92,25 @@
                     <label for="quantity">Quantity:</label>
                     <input type="number" id="quantity" name="quantity" required>
                 </div>
+                
+                <div class="form-group">
+                    <label for="cost_price">Cost Price (per unit, ₹):</label>
+                    <input type="number" step="0.01" id="cost_price" name="cost_price" required>
+                </div>
+                <div class="form-group">
+                    <label for="selling_price">Selling Price (per unit, ₹):</label>
+                    <input type="number" step="0.01" id="selling_price" name="selling_price" required>
+                </div>
+
                 <div class="form-group">
                     <label for="expiry_date">Expiry Date:</label>
                     <input type="date" id="expiry_date" name="expiry_date" required>
                 </div>
-                <button type="submit" class="submitbtn">Add to Stock</button>
+
+                <div class="button-group">
+                    <button type="submit" class="submitbtn">Add to Stock</button>
+                    <a href="{{ url_for('display_stock') }}" class="view-stock-btn">View Stock</a>
+                </div>
             </form>
         </div>
     </main>
