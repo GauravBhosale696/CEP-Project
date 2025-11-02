@@ -8,30 +8,46 @@
     <title>Dashboard</title>
     <style>
         .alert-box {
-            background: linear-gradient(135deg, #00B470, #00529B); /* Using colors from your theme */
+            background: linear-gradient(135deg, #00B470, #00529B);
+            /* Using colors from your theme */
             color: white;
             border-radius: 10px;
             padding: 20px;
             text-align: center;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            margin-bottom: 20px; /* Space between the alert rows */
+            margin-bottom: 20px;
+            /* Space between the alert rows */
         }
+
         .alert-box h3 {
             font-size: 1.5rem;
             margin-bottom: 5px;
         }
+
         .alert-box .value {
             font-size: 3rem;
             font-weight: 700;
             margin: 5px 0;
         }
+
         .alert-box .action-link {
-            color: #ffcc00; /* Yellow/Gold for high-contrast link */
+            color: #ffcc00;
+            /* Yellow/Gold for high-contrast link */
             text-decoration: none;
             font-weight: 600;
-            display: block; /* Makes the link take its own line */
+            display: block;
+            /* Makes the link take its own line */
             margin-top: 10px;
+            transition: color 0.3s ease;
+            font-size: 1rem;
+            transition: font-size 0.3s ease;
         }
+
+        .alert-box .action-link:hover{
+            font-size: 1.1rem;
+            color: #fbc606;
+        }
+
         /* Style for the main action buttons grid */
         .action-buttons-grid {
             display: grid;
@@ -39,7 +55,9 @@
             gap: 20px;
             width: 100%;
         }
-        .mainbox { /* Re-purposing the mainbox style for the grid container */
+
+        .mainbox {
+            /* Re-purposing the mainbox style for the grid container */
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -64,19 +82,20 @@
     <main>
 
         <div class="flash-area" style="text-align: center; margin-bottom: 20px;">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
             {% for category, message in messages %}
-              <div class="alert alert-{{ category }}" style="padding: 10px; background-color: #e3f2fd; border-radius: 5px;">
+            <div class="alert alert-{{ category }}"
+                style="padding: 10px; background-color: #e3f2fd; border-radius: 5px;">
                 {{ message }}
-              </div>
+            </div>
             {% endfor %}
-          {% endif %}
-        {% endwith %}
+            {% endif %}
+            {% endwith %}
         </div>
 
         <div class="mainbox">
-            
+
             <div class="alert-box">
                 <h3>Medicines Expiring Soon</h3>
                 <p class="value">{{ alerts.expiring_count }}</p>
@@ -87,10 +106,10 @@
 
             <div class="alert-box">
                 <h3>Low Stock Items (Quantity < 10)</h3>
-                <p class="value">{{ alerts.low_stock_count }}</p>
-                <a href="{{ url_for('display_stock') }}?alert=low_stock" class="action-link">
-                    Click to View Details in Stock
-                </a>
+                        <p class="value">{{ alerts.low_stock_count }}</p>
+                        <a href="{{ url_for('display_stock') }}?alert=low_stock" class="action-link">
+                            Click to View Details in Stock
+                        </a>
             </div>
 
             <div class="action-buttons-grid">
